@@ -4,6 +4,8 @@ import time
 import datetime
 import os
 import sys
+# At the top of the file, add:
+import argparse
 
 # Try to import psutil for memory tracking
 try:
@@ -192,11 +194,18 @@ def _get_memory_mb() -> float:
 # --------------------------------------------------------------------------
 # Main benchmark runner
 # --------------------------------------------------------------------------
-def run_benchmark():
-    models = ["llama3.2:3b", "phi3.5", "mistral"]
+def run_benchmark(output_file="results/benchmark_results.csv"):
+    models = [
+        "llama3.2:3b",
+        "phi3.5",
+        "mistral",
+        "llama3.2:3b-instruct-q4_K_M",
+        "phi3.5:3.8b-mini-instruct-q5_K_M",
+        "mistral:7b-instruct-q4_K_M",
+    ]
 
     os.makedirs("results", exist_ok=True)
-    output_path = "results/benchmark_results.csv"
+    output_path = output_file  # ← use the argument
 
     fieldnames = [
         "model", "category", "prompt_id", "prompt",
@@ -226,7 +235,6 @@ def run_benchmark():
             status = "✓" if not result["error"] else f"✗ {result['error'][:40]}"
             print(f"  →  {result['response_time_s']}s  {result['words_per_second']} wps  {status}")
 
-    # Save to CSV
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -237,4 +245,7 @@ def run_benchmark():
 
 
 if __name__ == "__main__":
-    run_benchmark()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default="results/benchmark_results_quantised.csv")
+    args = parser.parse_args()
+    run_benchmark(output_file=args.output)
